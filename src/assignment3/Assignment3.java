@@ -81,6 +81,31 @@ public class Assignment3 {
 
     }
 
+    /* Compute the centroid for a trapezoid.*/
+    public static double[] centroidTrap(double x1, double x2,
+            double x3, double x4, double y1) {
+        double[] result = new double[2];
+        double a = x2 - x1;
+        double b = x3 - x2;
+        double c = x4 - x1;
+        double h = y1;
+        
+        result[0] = ((Math.pow(((2 * a * b) + b), 2) + (a * c) + (b * c) + Math.pow(c,2)) / (3 * (b + c))) + x1;
+        result[1] = (h * ((2 * b) + c)) / (3 *(b + c));
+        
+        return result;
+    }
+    
+    /* Compute the centroid for a triangle.*/
+    public static double[] centroidTri(double x1, double x2,
+            double x3, double y1, double y2, double y3) {
+        double[] result = new double[2];
+        
+        result[0] = (x1 + x2 + x3) / 3.0;
+        result[1] = (y1 + y2 + y3) / 3.0;
+        return result;
+    }
+
     /* Return the degree of membership for Radiation (R) in a record.
     The degree of membership are saved in an int array called result with
     a size of 3. result[0] holds the value for low. result[1] holds the
@@ -244,7 +269,6 @@ public class Assignment3 {
             this.vibration = vibration;
             this.magnetic = magnetic;
             this.fume = fume;
-
         }
 
     }
