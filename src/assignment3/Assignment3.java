@@ -6,13 +6,11 @@
 package assignment3;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * Data Mining Assignment 3
  *
  * @author Tiffany Tran and Miranda Brawner
- *
  */
 public class Assignment3 {
 
@@ -40,19 +38,15 @@ public class Assignment3 {
         t.add(r10);
 
         for (int i = 0; i < t.size(); i++) {
-            System.out.println("r" + (i + 1));
-            fuzzy(t.get(i));
+            System.out.print("r" + (i + 1) + " GPX: " + fuzzy(t.get(i)));
+            System.out.println();
         }
 
-//        t.forEach((r) -> {
-//            
-//            fuzzy(r);
-//        });
     }
 
     /* Calculate the degrees of membership for a record. Retrieve the minimum
     value from each degree of membership for each p...*/
-    public static void fuzzy(Record r) {
+    public static double fuzzy(Record r) {
         double[] R = radiation(r);
         double[] V = vibration(r);
         double[] M = magnetic(r);
@@ -60,7 +54,7 @@ public class Assignment3 {
 
         /* Calculate the low rules for GPX: min(low(R), med(V), low(M)) = 1
         There is only one low rule therefore this is the max value. */
-        double low = Math.min(Math.min(R[0], V[1]), M[1]);
+        double low = Math.min(Math.min(R[0], V[1]), M[0]);
 
         /* Calculate the medium rules for GPX:
             Rule 2) min(med(R), med(M)) = 2
@@ -74,33 +68,88 @@ public class Assignment3 {
             Rule 4) min(low(R), high(M), low(F)) = 3
             Calculate the maxmimum between the two rules for the GPX high value.*/
         double high = Math.max(Math.min(Math.min(R[2], M[2]), F[2]),
-                Math.min(Math.min(R[0], M[2]), F[1]));
-        System.out.println("GPX Low: " + low);
-        System.out.println("GPX Medium :  " + medium);
-        System.out.println("GPX High : " + high);
+                Math.min(Math.min(R[0], M[2]), F[0]));
+
+        return GPX(low, medium, high);
 
     }
 
-    /* Compute the centroid for a trapezoid.*/
+    /* When calculating the GPX, find the center of each membership function.
+     */
+    public static double GPX(double low, double medium, double high) {
+        double[] centerLow = new double[2];
+        double[] centerMedium = new double[2];
+        double[] centerHigh = new double[2];
+
+        /* If low is 0, calculate the center of the line in GPX of low.
+           Else, calculate the centroid of the trapezoid. */
+        if (low == 0.0) {
+            centerLow[0] = 3.5 / 2.0;
+            centerLow[1] = 0.0;
+        } else {
+            double x1 = 0.0;
+            double x2 = low / 2.0;
+            double x3 = (low - (7.0 / 6.0)) / (-1.0 / 3.0);
+            double x4 = 3.5;
+            double[] temp = centroidTrap(x1, x2, x3, x4, low);
+            centerLow[0] = temp[0];
+            centerLow[1] = temp[1];
+        }
+        /* If medium is 0, calculate the center of the line in GPX of low.
+           Else, calculate the centroid of the trapezoid. */
+        if (medium == 0.0) {
+            centerMedium[0] = (4.5 + 1.0) / 2.0;
+            centerMedium[1] = 0.0;
+        } else {
+            double x1 = 1.0;
+            double x2 = medium + 1.0;
+            double x3 = (medium - (9.0 / 2.0)) / (-1.0);
+            double x4 = 4.5;
+            double[] temp = centroidTrap(x1, x2, x3, x4, medium);
+            centerMedium[0] = temp[0];
+            centerMedium[1] = temp[1];
+        }
+
+        /* If medium is 0, calculate the center of the line in GPX of low.
+           Else, calculate the centroid of the trapezoid. */
+        if (high == 0.0) {
+            centerHigh[0] = (7.0 + 2.5) / 2.0;
+            centerHigh[1] = 0.0;
+        } else {
+            double x1 = 2.5;
+            double x2 = (high + 1.0) / (2.0 / 5.0);
+            double x3 = (high - (7.0 / 2.0)) / (-1.0 / 2.0);
+            double x4 = 7.0;
+            double[] temp = centroidTrap(x1, x2, x3, x4, high);
+            centerHigh[0] = temp[0];
+            centerHigh[1] = temp[1];
+        }
+        double[] tri = centroidTri(centerLow[0], centerMedium[0], centerHigh[0],
+                centerLow[1], centerMedium[1], centerHigh[1]);
+        return tri[0];
+    }
+
+    /* Compute the centroid for a trapezoid. result[0] holds the x value of the
+    centroid. result[1] holds the y value of the centroid. */
     public static double[] centroidTrap(double x1, double x2,
             double x3, double x4, double y1) {
         double[] result = new double[2];
         double a = x2 - x1;
         double b = x3 - x2;
         double c = x4 - x1;
+
         double h = y1;
-        
-        result[0] = ((Math.pow(((2 * a * b) + b), 2) + (a * c) + (b * c) + Math.pow(c,2)) / (3 * (b + c))) + x1;
-        result[1] = (h * ((2 * b) + c)) / (3 *(b + c));
-        
+
+        result[0] = ((2*a*b + b*b + a*c + b*c + c*c) / (3 * (b + c))) + x1;
+        result[1] = (h * ((2 * b) + c)) / (3 * (b + c));
         return result;
     }
-    
+
     /* Compute the centroid for a triangle.*/
     public static double[] centroidTri(double x1, double x2,
             double x3, double y1, double y2, double y3) {
         double[] result = new double[2];
-        
+
         result[0] = (x1 + x2 + x3) / 3.0;
         result[1] = (y1 + y2 + y3) / 3.0;
         return result;
@@ -127,7 +176,7 @@ public class Assignment3 {
             result[1] = 1.0;
         }
         if (x >= 2.0 && x <= 3.5) { //medium
-            result[1] = ((-1.0 / 1.5) * x) + (7.0 / 3.0);
+            result[1] = ((-2.0 / 3.0) * x) + (7.0 / 3.0);
         }
         if (x >= 2.5 && x <= 3.0) { //high
             result[2] = 2.0 * x - 5.0;
@@ -178,41 +227,23 @@ public class Assignment3 {
         double[] result = new double[3];
         double x = r.magnetic;
 
-        if (x >= 1.0 && x <= 5.5) { //low
-            result[0] = ((-1.0 / 4.5) * x) + (5.5 / 4.5);
-        }
-        if (x >= 1.5 && x <= 3.0) { //medium
-            result[1] = ((1.0 / 1.5) * x) - 1.0;
-        }
-        if (x >= 3.0 && x <= 4.0) { //medium
-            result[1] = 1.0;
-        }
-        if (x >= 4.0 && x <= 6.5) { //medium
-            result[1] = ((-1.0 / 2.5) * x) + 2.6;
-        }
-        if (x >= 3.5 && x <= 6.0) { //high
-            result[2] = (1.0 / 2.5) * x - 1.4;
-        }
-        if (x >= 6.0) { //high
-            result[2] = 1;
-        }
         if (x >= 0.0 && x <= 1.0) { //low
             result[0] = 1;
         }
         if (x >= 1.0 && x <= 5.5) { //low
-            result[0] = ((-1.0 / 4.5) * x) + (5.5 / 4.5);
+            result[0] = ((-2.0 / 9.0) * x) + (11.0 / 9.0);
         }
         if (x >= 1.5 && x <= 3.0) { //medium
-            result[1] = ((1.0 / 1.5) * x) - 1.0;
+            result[1] = ((2.0 / 3.0) * x) - 1.0;
         }
         if (x >= 3.0 && x <= 4.0) { //medium
             result[1] = 1.0;
         }
         if (x >= 4.0 && x <= 6.5) { //medium
-            result[1] = ((-1.0 / 2.5) * x) + 2.6;
+            result[1] = ((-2.0 / 5.0) * x) + (13.0 / 5.0);
         }
         if (x >= 3.5 && x <= 6.0) { //high
-            result[2] = (1.0 / 2.5) * x - 1.4;
+            result[2] = (2.0 / 5.0) * x - (7.0 / 5.0);
         }
         if (x >= 6.0) { //high
             result[2] = 1;
@@ -226,24 +257,24 @@ public class Assignment3 {
     value for medium. result[2] holds the value for high.*/
     public static double[] fume(Record r) {
         double[] result = new double[3];
-        double x = r.magnetic;
+        double x = r.fume;
 
         if (x >= 0.0 && x <= 0.5) { //low
-            result[0] = (1.0 / 2.0) * x;
+            result[0] = 2.0 * x;
         }
-        if (x >= 0.5 && x <= 3.5) { //low
-            result[0] = ((-1.0 / 3.0) * x) + 1.16666666666;
+        if (x > 0.5 && x <= 3.5) { //low
+            result[0] = ((-1.0 / 3.0) * x) + (7.0 / 6.0);
         }
-        if (x >= 1.5 && x <= 3.5) { //medium
+        if (x > 1.5 && x <= 3.5) { //medium
             result[1] = ((1.0 / 2.0) * x) - (3.0 / 4.0);
         }
-        if (x >= 3.5 && x <= 7.0) { //medium
-            result[1] = ((-1.0 / 3.5) * x) + 2.0;
+        if (x > 3.5 && x <= 7.0) { //medium
+            result[1] = ((-2.0 / 7.0) * x) + 2.0;
         }
-        if (x >= 2.0 && x <= 7.3) { //high
-            result[2] = (1.0 / 5.3) * x - (2.0 / 5.3);
+        if (x > 2.0 && x <= 7.3) { //high
+            result[2] = ((10.0 / 53.0) * x) - (20.0 / 53.0);
         }
-        if (x >= 7.3) { //high
+        if (x > 7.3) { //high
             result[2] = 1;
         }
         return result;
